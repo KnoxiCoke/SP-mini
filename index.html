@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KM-Dosierungsrechner</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: rgba(255,255,255,0.08);
+      --card-border: rgba(255,255,255,0.14);
+      --text: #eef2ff;
+      --muted: #aeb8d6;
+      --accent: #5aa9ff;
+      --accent-2: #7f7bff;
+      --danger: #ff7d7d;
+      --shadow: 0 20px 50px rgba(0,0,0,0.35);
+      --radius: 22px;
+      --input-bg: rgba(255,255,255,0.06);
+      --input-border: rgba(255,255,255,0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(90,169,255,0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(127,123,255,0.18), transparent 28%),
+        linear-gradient(180deg, #0a0f1f 0%, #0d1326 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 36px;
+    }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      margin-bottom: 18px;
+      padding: 18px 22px;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 2.4vw, 2.3rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .controls {
+      padding: 20px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.01em;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .group {
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .group:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-bottom: 7px;
+      color: #f5f7ff;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 13px;
+      font-size: 0.97rem;
+      outline: none;
+      transition: 0.18s ease;
+    }
+
+    input::placeholder {
+      color: #93a0c9;
+    }
+
+    input:focus {
+      border-color: rgba(90,169,255,0.6);
+      box-shadow: 0 0 0 4px rgba(90,169,255,0.16);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .toggle-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      box-shadow: 0 12px 28px rgba(90,169,255,0.28);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
+    .btn-danger {
+      background: rgba(255,125,125,0.10);
+      color: #ffd8d8;
+      border: 1px solid rgba(255,125,125,0.18);
+    }
+
+    .btn-danger:hover {
+      background: rgba(255,125,125,0.16);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .results {
+      padding: 20px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .placeholder {
+      padding: 28px 20px;
+      border: 1px dashed rgba(255,255,255,0.16);
+      border-radius: 18px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .organ-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 22px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.045));
+    }
+
+    .organ-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .organ-title {
+      margin: 0;
+      font-size: 1.18rem;
+      letter-spacing: -0.02em;
+    }
+
+    .organ-meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .result-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 18px;
+      padding: 15px;
+      min-height: 100%;
+    }
+
+    .result-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .big {
+      font-size: 1.38rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 11px;
+      color: #ffffff;
+    }
+
+    .metric-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      font-size: 0.94rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 8px;
+    }
+
+    .metric:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    .metric span:first-child {
+      color: var(--muted);
+    }
+
+    .metric strong {
+      color: #ffffff;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .footnote {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.83rem;
+      line-height: 1.4;
+    }
+
+    .error-box {
+      border: 1px solid rgba(255,125,125,0.3);
+      background: rgba(255,125,125,0.08);
+      color: #ffd6d6;
+      padding: 14px 16px;
+      border-radius: 16px;
+      margin-bottom: 6px;
+      font-size: 0.94rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+      }
+
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar,
+      .controls,
+      .results {
+        padding: 16px;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .big {
+        font-size: 1.24rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="topbar panel">
+      <h1>KM-Dosierungsrechner</h1>
+    </section>
+
+    <div class="layout">
+      <aside class="controls panel">
+        <div class="group">
+          <h2 class="section-title">Allgemein</h2>
+          <div class="grid-2">
+            <div>
+              <label for="iodineConcentration">KM-Konzentration (mg Jod/ml)</label>
+              <input id="iodineConcentration" type="number" min="1" step="1" value="370" placeholder="370" inputmode="numeric" />
+            </div>
+            <div>
+              <label for="standardWeight">Standardpatient (kg)</label>
+              <input id="standardWeight" type="number" min="1" step="1" value="80" placeholder="80" inputmode="numeric" />
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top:12px;">
+            <div>
+              <label for="minIodine">Jod-Untergrenze (g)</label>
+              <input id="minIodine" type="number" min="0" step="0.01" value="17" placeholder="17" inputmode="decimal" />
+            </div>
+            <div>
+              <label for="maxIodine">Jod-Obergrenze (g)</label>
+              <input id="maxIodine" type="number" min="0" step="0.01" value="50" placeholder="50" inputmode="decimal" />
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2 class="section-title">Organgruppe 1</h2>
+          <div class="grid">
+            <div>
+              <label for="name1">Bezeichnung</label>
+              <input id="name1" type="text" value="Organgruppe 1" placeholder="z. B. Thorax" />
+            </div>
+            <div class="grid-2">
+              <div>
+                <label for="dose1">g Jod/kg</label>
+                <input id="dose1" type="number" min="0" step="0.01" value="0.42" placeholder="0.42" inputmode="decimal" />
+              </div>
+              <div>
+                <label for="time1">Injektionszeit (s)</label>
+                <input id="time1" type="number" min="1" step="1" value="30" placeholder="30" inputmode="numeric" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="toggle-row">
+            <button class="btn-secondary" id="toggleOrgan2Btn" type="button">+ Zweite Organgruppe</button>
+            <button class="btn-danger hidden" id="removeOrgan2Btn" type="button">Zweite Organgruppe entfernen</button>
+          </div>
+        </div>
+
+        <div class="group hidden" id="organ2Section">
+          <h2 class="section-title">Organgruppe 2</h2>
+          <div class="grid">
+            <div>
+              <label for="name2">Bezeichnung</label>
+              <input id="name2" type="text" placeholder="z. B. Abdomen" />
+            </div>
+            <div class="grid-2">
+              <div>
+                <label for="dose2">g Jod/kg</label>
+                <input id="dose2" type="number" min="0" step="0.01" placeholder="0.42" inputmode="decimal" />
+              </div>
+              <div>
+                <label for="time2">Injektionszeit (s)</label>
+                <input id="time2" type="number" min="1" step="1" placeholder="30" inputmode="numeric" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="calculateBtn" type="button">Berechnen</button>
+          <button class="btn-secondary" id="resetBtn" type="button">Standardwerte laden</button>
+        </div>
+      </aside>
+
+      <main class="results panel">
+        <div id="errorContainer"></div>
+        <div id="resultsContainer" class="placeholder">
+          Werte eingeben und berechnen.
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function parseNumber(id) {
+      const raw = document.getElementById(id).value.trim();
+      if (raw === "") return null;
+      const value = Number(raw.replace(",", "."));
+      return Number.isFinite(value) ? value : null;
+    }
+
+    function parseText(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function roundSchool(value) {
+      return Math.round(value);
+    }
+
+    function round1(value) {
+      return Math.round(value * 10) / 10;
+    }
+
+    function formatInt(value) {
+      return String(value);
+    }
+
+    function format1(value) {
+      return round1(value).toFixed(1);
+    }
+
+    function formatG(value) {
+      return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, "");
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function exactVolumeMl(iodineGrams, concentrationMgPerMl) {
+      return (iodineGrams * 1000) / concentrationMgPerMl;
+    }
+
+    function calcScenario(weightKg, dosePerKg, concentration, timeSec, minIodine, maxIodine) {
+      const rawIodine = weightKg * dosePerKg;
+      const usedIodine = clamp(rawIodine, minIodine, maxIodine);
+      const exactVol = exactVolumeMl(usedIodine, concentration);
+      const roundedVol = roundSchool(exactVol);
+      const flow = exactVol / timeSec;
+
+      return {
+        weightKg,
+        usedIodine,
+        roundedVol,
+        flow
+      };
+    }
+
+    function calcOrganGroup(name, dosePerKg, timeSec, concentration, minIodine, maxIodine, standardWeight) {
+      const minThresholdExact = minIodine / dosePerKg;
+      const maxThresholdExact = maxIodine / dosePerKg;
+
+      const minTriggerWeight = Math.floor(minThresholdExact);
+      const maxTriggerWeight = Math.ceil(maxThresholdExact);
+
+      return {
+        name,
+        dosePerKg,
+        timeSec,
+        standard: calcScenario(standardWeight, dosePerKg, concentration, timeSec, minIodine, maxIodine),
+        minTriggerWeight,
+        maxTriggerWeight,
+        minBoundary: calcScenario(minTriggerWeight, dosePerKg, concentration, timeSec, minIodine, maxIodine),
+        maxBoundary: calcScenario(maxTriggerWeight, dosePerKg, concentration, timeSec, minIodine, maxIodine)
+      };
+    }
+
+    function buildMetric(label, value) {
+      return `
+        <div class="metric">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </div>
+      `;
+    }
+
+    function renderScenarioBox(title, scenario, timeSec, noteText) {
+      return `
+        <div class="result-box">
+          <div class="result-label">${title}</div>
+          <div class="big">${formatInt(scenario.weightKg)} kg</div>
+          <div class="metric-list">
+            ${buildMetric("Volumen", `${formatInt(scenario.roundedVol)} ml`)}
+            ${buildMetric("Flow", `${format1(scenario.flow)} ml/s`)}
+            ${buildMetric("Injektionszeit", `${formatInt(timeSec)} s`)}
+            ${buildMetric("Jodmenge", `${formatG(scenario.usedIodine)} g`)}
+          </div>
+          <div class="footnote">${noteText}</div>
+        </div>
+      `;
+    }
+
+    function renderOrganCard(data) {
+      const standardText = `Standardpatient`;
+      const minText = `Untergrenze bis einschließlich ${formatInt(data.minTriggerWeight)} kg`;
+      const maxText = `Obergrenze ab ${formatInt(data.maxTriggerWeight)} kg`;
+
+      return `
+        <section class="organ-card">
+          <div class="organ-header">
+            <div>
+              <h3 class="organ-title">${escapeHtml(data.name)}</h3>
+              <div class="organ-meta">${formatG(data.dosePerKg)} g Jod/kg · ${formatInt(data.timeSec)} s</div>
+            </div>
+          </div>
+
+          <div class="result-grid">
+            ${renderScenarioBox("Standardpatient", data.standard, data.timeSec, standardText)}
+            ${renderScenarioBox("Untere Dosisschwelle", data.minBoundary, data.timeSec, minText)}
+            ${renderScenarioBox("Obere Dosisschwelle", data.maxBoundary, data.timeSec, maxText)}
+          </div>
+        </section>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function validateInputs(input) {
+      const errors = [];
+
+      if (input.concentration === null || input.concentration <= 0) {
+        errors.push("Die KM-Konzentration muss größer als 0 sein.");
+      }
+
+      if (input.standardWeight === null || input.standardWeight <= 0 || !Number.isInteger(input.standardWeight)) {
+        errors.push("Der Standardpatient muss als ganze kg-Zahl größer als 0 eingegeben werden.");
+      }
+
+      if (input.minIodine === null || input.minIodine < 0) {
+        errors.push("Die Jod-Untergrenze muss 0 oder größer sein.");
+      }
+
+      if (input.maxIodine === null || input.maxIodine <= 0) {
+        errors.push("Die Jod-Obergrenze muss größer als 0 sein.");
+      }
+
+      if (input.minIodine !== null && input.maxIodine !== null && input.minIodine > input.maxIodine) {
+        errors.push("Die Jod-Untergrenze darf nicht größer sein als die Jod-Obergrenze.");
+      }
+
+      if (!input.organs.length) {
+        errors.push("Mindestens eine Organgruppe mit gültiger Dosis und Injektionszeit ist erforderlich.");
+      }
+
+      input.organs.forEach((organ, index) => {
+        if (organ.dosePerKg === null || organ.dosePerKg <= 0) {
+          errors.push(`Organgruppe ${index + 1}: g Jod/kg muss größer als 0 sein.`);
+        }
+        if (organ.timeSec === null || organ.timeSec <= 0 || !Number.isInteger(organ.timeSec)) {
+          errors.push(`Organgruppe ${index + 1}: Injektionszeit muss als ganze Zahl größer als 0 eingegeben werden.`);
+        }
+      });
+
+      return errors;
+    }
+
+    function readInputs() {
+      const organs = [];
+
+      const dose1 = parseNumber("dose1");
+      const time1 = parseNumber("time1");
+      organs.push({
+        name: parseText("name1") || "Organgruppe 1",
+        dosePerKg: dose1,
+        timeSec: time1
+      });
+
+      const organ2Visible = !document.getElementById("organ2Section").classList.contains("hidden");
+      if (organ2Visible) {
+        const dose2 = parseNumber("dose2");
+        const time2 = parseNumber("time2");
+        const hasMeaningfulValues = dose2 !== null || time2 !== null || parseText("name2") !== "";
+
+        if (hasMeaningfulValues) {
+          organs.push({
+            name: parseText("name2") || "Organgruppe 2",
+            dosePerKg: dose2,
+            timeSec: time2
+          });
+        }
+      }
+
+      return {
+        concentration: parseNumber("iodineConcentration"),
+        standardWeight: parseNumber("standardWeight"),
+        minIodine: parseNumber("minIodine"),
+        maxIodine: parseNumber("maxIodine"),
+        organs
+      };
+    }
+
+    function renderErrors(errors) {
+      const container = document.getElementById("errorContainer");
+      if (!errors.length) {
+        container.innerHTML = "";
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="error-box">
+          ${errors.map(err => `<div>• ${escapeHtml(err)}</div>`).join("")}
+        </div>
+      `;
+    }
+
+    function calculate() {
+      const input = readInputs();
+      const errors = validateInputs(input);
+      renderErrors(errors);
+
+      const resultsContainer = document.getElementById("resultsContainer");
+
+      if (errors.length) {
+        resultsContainer.classList.add("placeholder");
+        resultsContainer.innerHTML = `Bitte die Eingaben korrigieren.`;
+        return;
+      }
+
+      const organResults = input.organs.map(organ =>
+        calcOrganGroup(
+          organ.name,
+          organ.dosePerKg,
+          organ.timeSec,
+          input.concentration,
+          input.minIodine,
+          input.maxIodine,
+          input.standardWeight
+        )
+      );
+
+      resultsContainer.classList.remove("placeholder");
+      resultsContainer.innerHTML = organResults.map(renderOrganCard).join("");
+    }
+
+    function showOrgan2() {
+      document.getElementById("organ2Section").classList.remove("hidden");
+      document.getElementById("toggleOrgan2Btn").classList.add("hidden");
+      document.getElementById("removeOrgan2Btn").classList.remove("hidden");
+    }
+
+    function hideOrgan2() {
+      document.getElementById("organ2Section").classList.add("hidden");
+      document.getElementById("toggleOrgan2Btn").classList.remove("hidden");
+      document.getElementById("removeOrgan2Btn").classList.add("hidden");
+
+      document.getElementById("name2").value = "";
+      document.getElementById("dose2").value = "";
+      document.getElementById("time2").value = "";
+
+      calculate();
+    }
+
+    function loadDefaultValues() {
+      document.getElementById("iodineConcentration").value = "370";
+      document.getElementById("standardWeight").value = "80";
+      document.getElementById("minIodine").value = "17";
+      document.getElementById("maxIodine").value = "50";
+
+      document.getElementById("name1").value = "Organgruppe 1";
+      document.getElementById("dose1").value = "0.42";
+      document.getElementById("time1").value = "30";
+
+      hideOrgan2();
+      document.getElementById("errorContainer").innerHTML = "";
+      calculate();
+    }
+
+    document.getElementById("calculateBtn").addEventListener("click", calculate);
+    document.getElementById("resetBtn").addEventListener("click", loadDefaultValues);
+    document.getElementById("toggleOrgan2Btn").addEventListener("click", showOrgan2);
+    document.getElementById("removeOrgan2Btn").addEventListener("click", hideOrgan2);
+
+    [
+      "iodineConcentration",
+      "standardWeight",
+      "minIodine",
+      "maxIodine",
+      "name1",
+      "dose1",
+      "time1",
+      "name2",
+      "dose2",
+      "time2"
+    ].forEach(id => {
+      document.getElementById(id).addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          calculate();
+        }
+      });
+    });
+
+    window.addEventListener("load", loadDefaultValues);
+  </script>
+</body>
+</html>
